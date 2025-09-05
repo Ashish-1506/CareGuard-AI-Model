@@ -25,11 +25,7 @@ CareGuard AI is an interactive web application that predicts if chronic care pat
 
 ### 1. Setup Environment
 
-```bash
-# Clone the repository
-git clone https://github.com/Ashish-1506/CareGuard-AI.git
-cd CareGuard-AI
-
+```shellscript
 # Create virtual environment
 python -m venv .venv
 
@@ -43,15 +39,66 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Run the Dashboard
+### 2. Generate Data & Train Model
 
-```bash
+```shellscript
+# Generate synthetic patient data
+cd src
+python synth_data.py
+
+# Train the risk prediction model
+python train.py
+
+# Test explainability
+python explain.py
+```
+
+### 3. Run the Dashboard
+
+```shellscript
 # Launch Streamlit dashboard
+cd ../app
 streamlit run streamlit_app.py
 ```
 
-The app will open in your browser at `http://localhost:8501`
+### 4. Start API Server (Optional)
 
+```shellscript
+# Start FastAPI server
+cd ../src
+uvicorn api:app --reload --port 8000
+```
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Data Sources  │    │   Feature Store  │    │   ML Pipeline   │
+│                 │────│                  │────│                 │
+│ • Vitals        │    │ • Engineered     │    │ • XGBoost       │
+│ • Labs          │    │   Features       │    │ • Calibration   │
+│ • Medications   │    │ • Time Windows   │    │ • Validation    │
+│ • Adherence     │    │ • Risk Flags     │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                          │
+                               ┌──────────────────────────┘
+                               │
+        ┌─────────────────┐    │    ┌─────────────────┐
+        │  Explainability │    │    │   API Service   │
+        │                 │────┼────│                 │
+        │ • SHAP Values   │    │    │ • FastAPI       │
+        │ • Clinical Text │    │    │ • Predictions   │
+        │ • Recommendations│   │    │ • Explanations  │
+        └─────────────────┘    │    └─────────────────┘
+                               │              │
+        ┌─────────────────┐    │              │
+        │   Dashboard     │────┘              │
+        │                 │───────────────────┘
+        │ • Cohort View   │
+        │ • Patient Detail│
+        │ • Risk Analytics│
+        └─────────────────┘
+```
 ## 🎯 Key Features
 
 ### 🏥 Clinical Dashboard
@@ -107,21 +154,28 @@ The app will open in your browser at `http://localhost:8501`
 ## 📁 Project Structure
 
 ```
-CareGuard-AI/
-├── streamlit_app.py        # Main Streamlit application
-├── requirements.txt        # Python dependencies
-├── README.md              # This file
-├── src/
-│   ├── features.py        # Feature engineering
-│   ├── explain.py         # SHAP explainability
-│   └── api.py            # FastAPI backend (optional)
-├── models/
-│   └── model.pkl         # Trained model bundle
+careguard-ai-model/
 ├── data/
-│   └── processed/
-│       └── training_table.csv  # Sample training data
-└── assets/               # Screenshots and images
+│   ├── raw/                 # Raw data files
+│   └── processed/           # Processed training data
+├── src/
+│   ├── synth_data.py       # Synthetic data generation
+│   ├── features.py         # Feature engineering
+│   ├── train.py            # Model training pipeline
+│   ├── explain.py          # SHAP explainability
+│   ├── evaluate.py         # Model evaluation
+│   ├── api.py              # FastAPI backend
+│   └── utils.py            # Utility functions
+├── app/
+│   └── streamlit_app.py    # Streamlit dashboard
+├── models/
+│   ├── model.pkl           # Trained model bundle
+│   └── metrics.json        # Performance metrics
+├── notebooks/              # Jupyter notebooks
+├── requirements.txt        # Python dependencies
+└── README.md              # This file
 ```
+
 
 ## 🔬 Data Features
 
@@ -192,6 +246,51 @@ CareGuard-AI/
 - **Transparent methodology** - open source codebase
 - **Explainable predictions** - SHAP-based interpretability
 - **Bias awareness** - designed with fairness considerations
+
+
+## 📈 API Documentation
+
+### Prediction Endpoints
+
+```http
+POST /predict
+Content-Type: application/json
+
+{
+  "age": 65,
+  "sex": "M",
+  "condition_primary": "Diabetes",
+  "hba1c_last": 8.5,
+  "weight_trend_30d": 2.0,
+  "adherence_mean": 0.75,
+  "bnp_last": 200,
+  "egfr_trend_90d": -5.0,
+  "sbp_last": 150,
+  "bmi": 32.0,
+  "days_since_last_lab": 120,
+  "smoker": 1
+}
+```
+
+```http
+POST /explain
+# Same input format as /predict
+# Returns detailed SHAP explanations
+```
+
+### Response Format
+
+```json
+{
+  "risk_probability": 0.35,
+  "risk_band": "High",
+  "clinical_summary": "Rising HbA1c (8.5%) and low medication adherence (75%) increase deterioration risk.",
+  "recommendations": [
+    "Consider therapy intensification; recheck HbA1c in 30-45 days",
+    "Enroll in adherence support program"
+  ]
+}
+```
 
 ## 🚀 Deployment Options
 
