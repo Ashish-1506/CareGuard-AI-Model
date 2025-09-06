@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Add src to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+sys.path.append('../src')
 
 try:
     from features import FeatureEngineer
@@ -723,7 +723,7 @@ if 'next_patient_id' not in st.session_state:
 def load_model():
     """Load the trained model bundle"""
     try:
-        return joblib.load(os.path.abspath(os.path.join(os.path.dirname(__file__), '../models/model.pkl')))
+        return joblib.load('../models/model.pkl')
     except FileNotFoundError:
         st.error("Model file not found. Please run the training pipeline first.")
         return None
@@ -732,7 +732,7 @@ def load_model():
 def load_sample_data():
     """Load sample patient data"""
     try:
-        return pd.read_csv(os.path.abspath(os.path.join(os.path.dirname(__file__), '../data/processed/training_table.csv')))
+        return pd.read_csv('../data/processed/training_table.csv')
     except FileNotFoundError:
         st.error("Sample data not found. Please run the data generation script first.")
         return None
@@ -1340,7 +1340,7 @@ def main():
                 if len(patient_data) > 0:
                     with st.spinner('Generating comprehensive clinical assessment...'):
                         df_display = create_cohort_overview(patient_data, model_bundle)
-                        explainer = ModelExplainer(os.path.abspath(os.path.join(os.path.dirname(__file__), '../models/model.pkl')))
+                        explainer = ModelExplainer('../models/model.pkl')
                         explanation = explainer.explain_patient(patient_data, str(patient_id))
                     
                     patient = df_display.iloc[0]
